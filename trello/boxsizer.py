@@ -53,6 +53,28 @@ class BoxSizer(Cmdln):
         output    = ['%s,%s' % (card[0], card[1]) for card in cards]
         print '\n'.join(output)
 
+    @option("-k", "--app-key", help='Trello supplied key to identify this application')
+    @option("--app-key-file", default='APP_KEY',  help='Trello supplied key to identify this application (default "APP_KEY")')
+    @option("-t", "--token", help='Access token for trello user')
+    @option("-f", "--token-file", default='ACCESS_TOKEN', help='File in which the access token is stored (default "ACCESS_TOKEN")')
+    def do_lists(self, subcmd, opts, BOARD_ID):
+        trello = self.connect(self.app_key(opts), self.access_token(opts))
+        raw_lists = trello.boards.get_list(BOARD_ID, fields='name')
+        output = ['%s,%s' % (x['id'], x['name']) for x in raw_lists]
+        print '\n'.join(output)
+
+    @option("-k", "--app-key", help='Trello supplied key to identify this application')
+    @option("--app-key-file", default='APP_KEY',  help='Trello supplied key to identify this application (default "APP_KEY")')
+    @option("-t", "--token", help='Access token for trello user')
+    @option("-f", "--token-file", default='ACCESS_TOKEN', help='File in which the access token is stored (default "ACCESS_TOKEN")')
+    def do_load_list(self, subcmd, opts, LIST_ID, FILENAME):
+        trello = self.connect(self.app_key(opts), self.access_token(opts))
+        lines = open(FILENAME, 'r').read().strip().splitlines()
+        for line in lines:
+            print line
+            trello.lists.new_card(LIST_ID, name=line)
+
+
 if __name__ == "__main__":
     boxsizer = BoxSizer()
     sys.exit(boxsizer.main())
