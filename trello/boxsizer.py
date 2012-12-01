@@ -64,16 +64,26 @@ class BoxSizer(Cmdln):
     @option("-t", "--token", help='Access token for trello user')
     @option("-f", "--token-file", default='ACCESS_TOKEN', help='File in which the access token is stored (default "ACCESS_TOKEN")')
     def do_lists(self, subcmd, opts, BOARD_ID):
+        """${cmd_name}: List the lists for supplied BOARD_ID
+        
+        ${cmd_usage}
+        ${cmd_option_list}
+        """
         trello = self.connect(self.app_key(opts), self.access_token(opts))
         raw_lists = trello.boards.get_list(BOARD_ID, fields='name')
         output = ['%s,%s' % (x['id'], x['name']) for x in raw_lists]
         print '\n'.join(output)
 
     @option("-k", "--app-key", help='Trello supplied key to identify this application')
-    @option("--app-key-file", default='APP_KEY',  help='Trello supplied key to identify this application (default "APP_KEY")')
+    @option("--app-key-file", default='APP_KEY', help='Trello supplied key to identify this application (default "APP_KEY")')
     @option("-t", "--token", help='Access token for trello user')
     @option("-f", "--token-file", default='ACCESS_TOKEN', help='File in which the access token is stored (default "ACCESS_TOKEN")')
     def do_load_list(self, subcmd, opts, LIST_ID, FILENAME):
+        """${cmd_name}: Create new cards in LIST_ID for each line in FILENAME
+        
+        ${cmd_usage}
+        ${cmd_option_list}
+        """
         trello = self.connect(self.app_key(opts), self.access_token(opts))
         lines = open(FILENAME, 'r').read().strip().splitlines()
         for line in lines:
