@@ -1,10 +1,16 @@
 #!/usr/bin/env python
 import sys
 from cmdln import Cmdln, alias, option
+
 from trello import TrelloApi
+import gspread
 
 class BoxSizer(Cmdln):
     name = 'boxsizer'
+
+    def google_creds(self, opts):
+        account, pwd = open(opts.credentials_file, 'r').read().strip().splitlines()
+        return account, pwd
 
     def access_token(self, opts):
         return opts.token if opts.token else open(opts.token_file, 'r').read().strip()
@@ -74,6 +80,23 @@ class BoxSizer(Cmdln):
             print line
             trello.lists.new_card(LIST_ID, name=line)
 
+    @option("-c", "--credentials-file", default='GOOGLE_CREDENTIALS', help='File containing username and password, on separate lines (default "GOOGLE_CREDENTIALS")')
+    def do_load_sheet(self, subcmd, opts, SPREADSHEET, WORKSHEET, FILENAME):
+        """${cmd_name}: Load lines from FILENAME into WORKSHEET (name) in SPREADSHEET (name)
+        
+        ${cmd_usage}
+        ${cmd_option_list}
+        """
+        gc = gspread.login(*self.google_creds(opts))
+        wks = gc.open(SPREADSHEET).worksheet(WORKSHEET)
+
+        lines = open(FILENAME, 'r').read().strip().splitlines()
+        reqs = [line.split(',', 1) for line in lines]
+
+        cells = wks.range('A2:B%d' % len(reqs))
+        for cell in cells:
+            cell.value = reqs[cell.row-2][cell.col-1]
+        wks.update_cells(cells)
 
 if __name__ == "__main__":
     boxsizer = BoxSizer()
