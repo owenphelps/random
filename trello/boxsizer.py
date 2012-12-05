@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
 from cmdln import Cmdln, alias, option
+import fileinput
 
 from trello import TrelloApi
 import gspread
@@ -78,17 +79,18 @@ class BoxSizer(Cmdln):
     @option("--app-key-file", default='APP_KEY', help='Trello supplied key to identify this application (default "APP_KEY")')
     @option("-t", "--token", help='Access token for trello user')
     @option("-f", "--token-file", default='ACCESS_TOKEN', help='File in which the access token is stored (default "ACCESS_TOKEN")')
-    def do_load_list(self, subcmd, opts, LIST_ID, FILENAME):
-        """${cmd_name}: Create new cards in LIST_ID for each line in FILENAME
+    def do_load_list(self, subcmd, opts, LIST_ID, *FILENAMES):
+        """${cmd_name}: Create new cards in LIST_ID for each line in FILENAMES
         
         ${cmd_usage}
         ${cmd_option_list}
         """
         trello = self.connect(self.app_key(opts), self.access_token(opts))
-        lines = open(FILENAME, 'r').read().strip().splitlines()
-        for line in lines:
+        for line in fileinput.input(FILENAMES):
+            line = line.strip()
             print line
             trello.lists.new_card(LIST_ID, name=line)
+
 
     @option("-c", "--credentials-file", default='GOOGLE_CREDENTIALS', help='File containing username and password, on separate lines (default "GOOGLE_CREDENTIALS")')
     def do_load_sheet(self, subcmd, opts, SPREADSHEET, WORKSHEET, FILENAME):
