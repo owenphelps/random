@@ -227,13 +227,43 @@
             font-weight: bold;
         }
 
+        .worst-score {
+            background: #fecaca !important;
+            font-weight: bold;
+        }
+
         .current-leader {
             background: #fef3c7 !important;
             font-weight: bold;
         }
 
+        .last-place {
+            background: #fecaca !important;
+            font-weight: bold;
+        }
+
         .leader-cell {
             font-size: 16px;
+        }
+
+        .score-table th.player-header {
+            border-left: 2px solid #5568d3;
+        }
+
+        .score-table td.round-score {
+            border-left: 2px solid #e0e0e0;
+            font-size: 13px;
+        }
+
+        .score-table td.cumulative-total {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .score-table th.sub-header {
+            background: #8b9ce8;
+            font-size: 11px;
+            padding: 5px 3px;
         }
 
         @media (max-width: 600px) {
@@ -371,9 +401,12 @@
         function renderGame() {
             document.getElementById('scoreTableHead').innerHTML = `
                 <tr>
-                    <th>Round</th>
-                    ${players.map(p => `<th>${p}</th>`).join('')}
-                    <th>Leader</th>
+                    <th rowspan="2">Round</th>
+                    ${players.map(p => `<th colspan="2" class="player-header">${p}</th>`).join('')}
+                    <th rowspan="2">Leader</th>
+                </tr>
+                <tr>
+                    ${players.map(() => `<th class="sub-header">Score</th><th class="sub-header">Total</th>`).join('')}
                 </tr>
             `;
 
@@ -388,13 +421,15 @@
 
             document.getElementById('scoreTableBody').innerHTML =
                 rounds.map((round, idx) => {
-                    // Find best score in this round (lowest)
+                    // Find best and worst scores in this round (lowest and highest)
                     const roundScores = players.map(p => round[p] || 0);
                     const bestRoundScore = Math.min(...roundScores);
+                    const worstRoundScore = Math.max(...roundScores);
 
-                    // Find leader after this round (lowest cumulative)
+                    // Find leader and last place after this round
                     const roundTotals = cumulativeTotals[idx];
                     const leaderScore = Math.min(...Object.values(roundTotals));
+                    const lastPlaceScore = Math.max(...Object.values(roundTotals));
                     const leaders = players.filter(p => roundTotals[p] === leaderScore);
 
                     return `
@@ -402,37 +437,49 @@
                         <td><strong>R${idx + 1}</strong></td>
                         ${players.map(player => {
                             const score = round[player] || 0;
-                            const isBestInRound = score === bestRoundScore && score > 0;
-                            const cssClass = isBestInRound ? 'best-score' : '';
+                            const cumulative = roundTotals[player];
+
+                            const isBestInRound = score === bestRoundScore && score > 0 && roundScores.filter(s => s > 0).length > 1;
+                            const isWorstInRound = score === worstRoundScore && score > 0 && roundScores.filter(s => s > 0).length > 1;
+                            const isLeaderInRound = cumulative === leaderScore;
+                            const isLastPlace = cumulative === lastPlaceScore && cumulative > 0 && players.length > 1;
+
+                            const scoreClass = isBestInRound ? 'best-score' : (isWorstInRound ? 'worst-score' : '');
+                            const totalClass = isLeaderInRound ? 'current-leader' : (isLastPlace && cumulative !== leaderScore ? 'last-place' : '');
 
                             return `
-                            <td class="${cssClass}">
+                            <td class="round-score ${scoreClass}">
                                 ${idx === currentRound && !gameEnded ?
                                     `<input type="number"
                                             class="score-input"
                                             value="${score}"
                                             onchange="updateScore(${idx}, '${player}', this.value)"
                                             min="0" />` :
-                                    `${score}${isBestInRound ? ' ⭐' : ''}`
+                                    `${score}${isBestInRound ? ' ⭐' : ''}${isWorstInRound ? ' ❌' : ''}`
                                 }
+                            </td>
+                            <td class="cumulative-total ${totalClass}">
+                                ${cumulative}${isLeaderInRound ? ' 👑' : ''}
                             </td>
                         `}).join('')}
                         <td class="leader-cell">
-                            ${leaders.length === 1 ? `👑 ${leaders[0]}` :
-                              leaders.length > 1 ? `👑 Tie` : ''}
+                            ${leaders.length === 1 ? `${leaders[0]}` :
+                              leaders.length > 1 ? `Tie` : ''}
                         </td>
                     </tr>
                 `}).join('');
 
             const totals = calculateTotals();
             const currentLeaderScore = Math.min(...Object.values(totals));
+            const currentLastPlaceScore = Math.max(...Object.values(totals));
 
             document.getElementById('scoreTableFoot').innerHTML = `
                 <tr class="total-row">
-                    <td>Total</td>
+                    <td>Final</td>
                     ${players.map(player => {
                         const isLeader = totals[player] === currentLeaderScore;
-                        return `<td class="${isLeader ? 'current-leader' : ''}">${totals[player]}${isLeader ? ' 👑' : ''}</td>`;
+                        const isLastPlace = totals[player] === currentLastPlaceScore && totals[player] !== currentLeaderScore;
+                        return `<td colspan="2" class="${isLeader ? 'current-leader' : (isLastPlace ? 'last-place' : '')}">${totals[player]}${isLeader ? ' 👑' : ''}${isLastPlace ? ' ❌' : ''}</td>`;
                     }).join('')}
                     <td></td>
                 </tr>
