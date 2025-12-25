@@ -454,6 +454,7 @@
                                             class="score-input"
                                             value="${score}"
                                             onchange="updateScore(${idx}, '${player}', this.value)"
+                                            onfocus="this.select()"
                                             min="0" />` :
                                     `${score}${isBestInRound ? ' ⭐' : ''}${isWorstInRound ? ' ❌' : ''}`
                                 }
