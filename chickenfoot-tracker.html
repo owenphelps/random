@@ -265,19 +265,9 @@
 
             <div style="overflow-x: auto;">
                 <table class="score-table">
-                    <thead>
-                        <tr>
-                            <th>Round</th>
-                            <th id="playerHeaders"></th>
-                        </tr>
-                    </thead>
+                    <thead id="scoreTableHead"></thead>
                     <tbody id="scoreTableBody"></tbody>
-                    <tfoot>
-                        <tr class="total-row">
-                            <td>Total</td>
-                            <td id="totalScores"></td>
-                        </tr>
-                    </tfoot>
+                    <tfoot id="scoreTableFoot"></tfoot>
                 </table>
             </div>
 
@@ -365,8 +355,12 @@
         }
 
         function renderGame() {
-            document.getElementById('playerHeaders').innerHTML =
-                players.map(p => `<th>${p}</th>`).join('');
+            document.getElementById('scoreTableHead').innerHTML = `
+                <tr>
+                    <th>Round</th>
+                    ${players.map(p => `<th>${p}</th>`).join('')}
+                </tr>
+            `;
 
             document.getElementById('scoreTableBody').innerHTML =
                 rounds.map((round, idx) => `
@@ -388,8 +382,12 @@
                 `).join('');
 
             const totals = calculateTotals();
-            document.getElementById('totalScores').innerHTML =
-                players.map(player => `<td>${totals[player]}</td>`).join('');
+            document.getElementById('scoreTableFoot').innerHTML = `
+                <tr class="total-row">
+                    <td>Total</td>
+                    ${players.map(player => `<td>${totals[player]}</td>`).join('')}
+                </tr>
+            `;
 
             document.getElementById('currentRound').textContent =
                 gameEnded ? 'Game Ended' : `Round ${currentRound + 1}`;
