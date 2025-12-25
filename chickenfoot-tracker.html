@@ -439,8 +439,8 @@
                             const score = round[player] || 0;
                             const cumulative = roundTotals[player];
 
-                            const isBestInRound = score === bestRoundScore && score > 0 && roundScores.filter(s => s > 0).length > 1;
-                            const isWorstInRound = score === worstRoundScore && score > 0 && roundScores.filter(s => s > 0).length > 1;
+                            const isBestInRound = score === bestRoundScore && bestRoundScore !== worstRoundScore;
+                            const isWorstInRound = score === worstRoundScore && bestRoundScore !== worstRoundScore;
                             const isLeaderInRound = cumulative === leaderScore;
                             const isLastPlace = cumulative === lastPlaceScore && cumulative > 0 && players.length > 1;
 
