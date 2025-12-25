@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Chickenfoot Score Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .setup-section, .game-section {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .player-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"], input[type="number"] {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:active {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:active {
+            background: #d0d0d0;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:active {
+            background: #dc2626;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:active {
+            background: #059669;
+        }
+
+        .btn-full {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .player-list {
+            list-style: none;
+            margin-bottom: 15px;
+        }
+
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f5f5f5;
+            margin-bottom: 8px;
+            border-radius: 8px;
+        }
+
+        .player-item button {
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+
+        .score-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .score-table th {
+            background: #667eea;
+            color: white;
+            padding: 10px 5px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .score-table td {
+            padding: 8px 5px;
+            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .score-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .score-table .total-row {
+            background: #667eea !important;
+            color: white;
+            font-weight: bold;
+        }
+
+        .score-table .total-row td {
+            padding: 12px 5px;
+        }
+
+        .score-input {
+            width: 60px;
+            padding: 6px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .current-round {
+            background: #fef3c7;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: #92400e;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .controls button {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .winner-banner {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 600px) {
+            .score-table {
+                font-size: 12px;
+            }
+
+            .score-input {
+                width: 50px;
+                font-size: 12px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            button {
+                font-size: 14px;
+                padding: 10px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🐔 Chickenfoot Score Tracker</h1>
+        </header>
+
+        <div id="setupSection" class="setup-section">
+            <h2 style="margin-bottom: 15px; color: #667eea;">Setup Game</h2>
+            <div class="player-input-group">
+                <input type="text" id="playerNameInput" placeholder="Enter player name" />
+                <button class="btn-primary" onclick="addPlayer()">Add Player</button>
+            </div>
+            <ul id="playerList" class="player-list"></ul>
+            <button class="btn-success btn-full" onclick="startGame()">Start Game</button>
+        </div>
+
+        <div id="gameSection" class="game-section hidden">
+            <div id="winnerBanner" class="winner-banner hidden"></div>
+            <div class="current-round" id="currentRound">Round 1</div>
+
+            <div style="overflow-x: auto;">
+                <table class="score-table">
+                    <thead>
+                        <tr>
+                            <th>Round</th>
+                            <th id="playerHeaders"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="scoreTableBody"></tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td>Total</td>
+                            <td id="totalScores"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="controls">
+                <button class="btn-primary" onclick="addRound()">Add Round</button>
+                <button class="btn-secondary" onclick="endGame()">End Game</button>
+                <button class="btn-danger" onclick="newGame()">New Game</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let players = [];
+        let rounds = [];
+        let currentRound = 0;
+        let gameEnded = false;
+
+        function loadGame() {
+            const saved = localStorage.getItem('chickenfootGame');
+            if (saved) {
+                const data = JSON.parse(saved);
+                players = data.players || [];
+                rounds = data.rounds || [];
+                currentRound = data.currentRound || 0;
+                gameEnded = data.gameEnded || false;
+
+                if (players.length > 0) {
+                    document.getElementById('setupSection').classList.add('hidden');
+                    document.getElementById('gameSection').classList.remove('hidden');
+                    renderGame();
+                }
+            }
+        }
+
+        function saveGame() {
+            localStorage.setItem('chickenfootGame', JSON.stringify({
+                players,
+                rounds,
+                currentRound,
+                gameEnded
+            }));
+        }
+
+        function addPlayer() {
+            const input = document.getElementById('playerNameInput');
+            const name = input.value.trim();
+
+            if (name && !players.includes(name)) {
+                players.push(name);
+                input.value = '';
+                renderPlayerList();
+            }
+        }
+
+        function removePlayer(name) {
+            players = players.filter(p => p !== name);
+            renderPlayerList();
+        }
+
+        function renderPlayerList() {
+            const list = document.getElementById('playerList');
+            list.innerHTML = players.map(name => `
+                <li class="player-item">
+                    <span>${name}</span>
+                    <button class="btn-danger" onclick="removePlayer('${name}')">Remove</button>
+                </li>
+            `).join('');
+        }
+
+        function startGame() {
+            if (players.length < 2) {
+                alert('Please add at least 2 players');
+                return;
+            }
+
+            rounds = [players.reduce((acc, player) => ({ ...acc, [player]: 0 }), {})];
+            currentRound = 0;
+            gameEnded = false;
+
+            document.getElementById('setupSection').classList.add('hidden');
+            document.getElementById('gameSection').classList.remove('hidden');
+
+            renderGame();
+            saveGame();
+        }
+
+        function renderGame() {
+            document.getElementById('playerHeaders').innerHTML =
+                players.map(p => `<th>${p}</th>`).join('');
+
+            document.getElementById('scoreTableBody').innerHTML =
+                rounds.map((round, idx) => `
+                    <tr>
+                        <td><strong>R${idx + 1}</strong></td>
+                        ${players.map(player => `
+                            <td>
+                                ${idx === currentRound && !gameEnded ?
+                                    `<input type="number"
+                                            class="score-input"
+                                            value="${round[player] || 0}"
+                                            onchange="updateScore(${idx}, '${player}', this.value)"
+                                            min="0" />` :
+                                    (round[player] || 0)
+                                }
+                            </td>
+                        `).join('')}
+                    </tr>
+                `).join('');
+
+            const totals = calculateTotals();
+            document.getElementById('totalScores').innerHTML =
+                players.map(player => `<td>${totals[player]}</td>`).join('');
+
+            document.getElementById('currentRound').textContent =
+                gameEnded ? 'Game Ended' : `Round ${currentRound + 1}`;
+
+            if (gameEnded) {
+                const winner = Object.entries(totals).reduce((min, [player, score]) =>
+                    score < min.score ? { player, score } : min
+                , { player: '', score: Infinity });
+
+                const winnerBanner = document.getElementById('winnerBanner');
+                winnerBanner.textContent = `🏆 ${winner.player} Wins! (${winner.score} points)`;
+                winnerBanner.classList.remove('hidden');
+            } else {
+                document.getElementById('winnerBanner').classList.add('hidden');
+            }
+        }
+
+        function updateScore(roundIdx, player, value) {
+            rounds[roundIdx][player] = parseInt(value) || 0;
+            saveGame();
+            renderGame();
+        }
+
+        function calculateTotals() {
+            return players.reduce((totals, player) => {
+                totals[player] = rounds.reduce((sum, round) => sum + (round[player] || 0), 0);
+                return totals;
+            }, {});
+        }
+
+        function addRound() {
+            if (gameEnded) {
+                alert('Game has ended. Start a new game to continue.');
+                return;
+            }
+
+            currentRound++;
+            rounds.push(players.reduce((acc, player) => ({ ...acc, [player]: 0 }), {}));
+            saveGame();
+            renderGame();
+        }
+
+        function endGame() {
+            if (confirm('Are you sure you want to end this game?')) {
+                gameEnded = true;
+                saveGame();
+                renderGame();
+            }
+        }
+
+        function newGame() {
+            if (confirm('Start a new game? Current game will be cleared.')) {
+                localStorage.removeItem('chickenfootGame');
+                players = [];
+                rounds = [];
+                currentRound = 0;
+                gameEnded = false;
+
+                document.getElementById('setupSection').classList.remove('hidden');
+                document.getElementById('gameSection').classList.add('hidden');
+                renderPlayerList();
+            }
+        }
+
+        document.getElementById('playerNameInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addPlayer();
+            }
+        });
+
+        loadGame();
+    </script>
+</body>
+</html>
