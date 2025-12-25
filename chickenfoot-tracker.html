@@ -222,6 +222,20 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
+        .best-score {
+            background: #d1fae5 !important;
+            font-weight: bold;
+        }
+
+        .current-leader {
+            background: #fef3c7 !important;
+            font-weight: bold;
+        }
+
+        .leader-cell {
+            font-size: 16px;
+        }
+
         @media (max-width: 600px) {
             .score-table {
                 font-size: 12px;
@@ -359,33 +373,68 @@
                 <tr>
                     <th>Round</th>
                     ${players.map(p => `<th>${p}</th>`).join('')}
+                    <th>Leader</th>
                 </tr>
             `;
 
+            // Calculate cumulative totals after each round
+            const cumulativeTotals = rounds.map((_, roundIdx) => {
+                return players.reduce((totals, player) => {
+                    totals[player] = rounds.slice(0, roundIdx + 1)
+                        .reduce((sum, r) => sum + (r[player] || 0), 0);
+                    return totals;
+                }, {});
+            });
+
             document.getElementById('scoreTableBody').innerHTML =
-                rounds.map((round, idx) => `
+                rounds.map((round, idx) => {
+                    // Find best score in this round (lowest)
+                    const roundScores = players.map(p => round[p] || 0);
+                    const bestRoundScore = Math.min(...roundScores);
+
+                    // Find leader after this round (lowest cumulative)
+                    const roundTotals = cumulativeTotals[idx];
+                    const leaderScore = Math.min(...Object.values(roundTotals));
+                    const leaders = players.filter(p => roundTotals[p] === leaderScore);
+
+                    return `
                     <tr>
                         <td><strong>R${idx + 1}</strong></td>
-                        ${players.map(player => `
-                            <td>
+                        ${players.map(player => {
+                            const score = round[player] || 0;
+                            const isBestInRound = score === bestRoundScore && score > 0;
+                            const cssClass = isBestInRound ? 'best-score' : '';
+
+                            return `
+                            <td class="${cssClass}">
                                 ${idx === currentRound && !gameEnded ?
                                     `<input type="number"
                                             class="score-input"
-                                            value="${round[player] || 0}"
+                                            value="${score}"
                                             onchange="updateScore(${idx}, '${player}', this.value)"
                                             min="0" />` :
-                                    (round[player] || 0)
+                                    `${score}${isBestInRound ? ' ⭐' : ''}`
                                 }
                             </td>
-                        `).join('')}
+                        `}).join('')}
+                        <td class="leader-cell">
+                            ${leaders.length === 1 ? `👑 ${leaders[0]}` :
+                              leaders.length > 1 ? `👑 Tie` : ''}
+                        </td>
                     </tr>
-                `).join('');
+                `}).join('');
 
             const totals = calculateTotals();
+            const currentLeaderScore = Math.min(...Object.values(totals));
+
             document.getElementById('scoreTableFoot').innerHTML = `
                 <tr class="total-row">
                     <td>Total</td>
-                    ${players.map(player => `<td>${totals[player]}</td>`).join('')}
+                    ${players.map(player => {
+                        const isLeader = totals[player] === currentLeaderScore;
+                        return `<td class="${isLeader ? 'current-leader' : ''}">${totals[player]}${isLeader ? ' 👑' : ''}</td>`;
+                    }).join('')}
+                    <td></td>
                 </tr>
             `;
 
