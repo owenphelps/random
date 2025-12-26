@@ -566,12 +566,15 @@
                 gameEnded ? 'Game Ended' : `Round ${currentRound + 1}`;
 
             if (gameEnded) {
-                const winner = Object.entries(totals).reduce((min, [player, score]) =>
-                    score < min.score ? { player, score } : min
-                , { player: '', score: Infinity });
+                const winnerScore = Math.min(...Object.values(totals));
+                const winners = players.filter(p => totals[p] === winnerScore);
 
                 const winnerBanner = document.getElementById('winnerBanner');
-                winnerBanner.textContent = `🏆 ${winner.player} Wins! (${winner.score} points)`;
+                if (winners.length === 1) {
+                    winnerBanner.textContent = `🏆 ${winners[0]} Wins! (${winnerScore} points)`;
+                } else {
+                    winnerBanner.textContent = `🏆 Tie! ${winners.join(', ')} Win! (${winnerScore} points each)`;
+                }
                 winnerBanner.classList.remove('hidden');
             } else {
                 document.getElementById('winnerBanner').classList.add('hidden');
