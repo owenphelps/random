@@ -373,12 +373,23 @@
 
         function renderPlayerList() {
             const list = document.getElementById('playerList');
-            list.innerHTML = players.map(name => `
-                <li class="player-item">
-                    <span>${name}</span>
-                    <button class="btn-danger" onclick="removePlayer('${name}')">Remove</button>
-                </li>
-            `).join('');
+            list.innerHTML = '';
+            players.forEach(name => {
+                const li = document.createElement('li');
+                li.className = 'player-item';
+                
+                const span = document.createElement('span');
+                span.textContent = name;
+                
+                const button = document.createElement('button');
+                button.className = 'btn-danger';
+                button.textContent = 'Remove';
+                button.addEventListener('click', () => removePlayer(name));
+                
+                li.appendChild(span);
+                li.appendChild(button);
+                list.appendChild(li);
+            });
         }
 
         function startGame() {
@@ -399,16 +410,43 @@
         }
 
         function renderGame() {
-            document.getElementById('scoreTableHead').innerHTML = `
-                <tr>
-                    <th rowspan="2">Round</th>
-                    ${players.map(p => `<th colspan="2" class="player-header">${p}</th>`).join('')}
-                    <th rowspan="2">Leader</th>
-                </tr>
-                <tr>
-                    ${players.map(() => `<th class="sub-header">Score</th><th class="sub-header">Total</th>`).join('')}
-                </tr>
-            `;
+            // Render table head with escaped player names
+            const headRow1 = document.createElement('tr');
+            const roundHeader = document.createElement('th');
+            roundHeader.setAttribute('rowspan', '2');
+            roundHeader.textContent = 'Round';
+            headRow1.appendChild(roundHeader);
+            
+            players.forEach(p => {
+                const th = document.createElement('th');
+                th.setAttribute('colspan', '2');
+                th.className = 'player-header';
+                th.textContent = p;
+                headRow1.appendChild(th);
+            });
+            
+            const leaderHeader = document.createElement('th');
+            leaderHeader.setAttribute('rowspan', '2');
+            leaderHeader.textContent = 'Leader';
+            headRow1.appendChild(leaderHeader);
+            
+            const headRow2 = document.createElement('tr');
+            players.forEach(() => {
+                const scoreHeader = document.createElement('th');
+                scoreHeader.className = 'sub-header';
+                scoreHeader.textContent = 'Score';
+                headRow2.appendChild(scoreHeader);
+                
+                const totalHeader = document.createElement('th');
+                totalHeader.className = 'sub-header';
+                totalHeader.textContent = 'Total';
+                headRow2.appendChild(totalHeader);
+            });
+            
+            const thead = document.getElementById('scoreTableHead');
+            thead.innerHTML = '';
+            thead.appendChild(headRow1);
+            thead.appendChild(headRow2);
 
             // Calculate cumulative totals after each round
             const cumulativeTotals = rounds.map((_, roundIdx) => {
@@ -419,69 +457,110 @@
                 }, {});
             });
 
-            document.getElementById('scoreTableBody').innerHTML =
-                rounds.map((round, idx) => {
-                    // Find best and worst scores in this round (lowest and highest)
-                    const roundScores = players.map(p => round[p] || 0);
-                    const bestRoundScore = Math.min(...roundScores);
-                    const worstRoundScore = Math.max(...roundScores);
+            // Render table body with escaped player names
+            const tbody = document.getElementById('scoreTableBody');
+            tbody.innerHTML = '';
+            
+            rounds.forEach((round, idx) => {
+                // Find best and worst scores in this round (lowest and highest)
+                const roundScores = players.map(p => round[p] || 0);
+                const bestRoundScore = Math.min(...roundScores);
+                const worstRoundScore = Math.max(...roundScores);
 
-                    // Find leader and last place after this round
-                    const roundTotals = cumulativeTotals[idx];
-                    const leaderScore = Math.min(...Object.values(roundTotals));
-                    const lastPlaceScore = Math.max(...Object.values(roundTotals));
-                    const leaders = players.filter(p => roundTotals[p] === leaderScore);
+                // Find leader and last place after this round
+                const roundTotals = cumulativeTotals[idx];
+                const leaderScore = Math.min(...Object.values(roundTotals));
+                const lastPlaceScore = Math.max(...Object.values(roundTotals));
+                const leaders = players.filter(p => roundTotals[p] === leaderScore);
 
-                    return `
-                    <tr>
-                        <td><strong>R${idx + 1}</strong></td>
-                        ${players.map(player => {
-                            const score = round[player] || 0;
-                            const cumulative = roundTotals[player];
+                const tr = document.createElement('tr');
+                
+                // Round number cell
+                const roundCell = document.createElement('td');
+                const roundStrong = document.createElement('strong');
+                roundStrong.textContent = `R${idx + 1}`;
+                roundCell.appendChild(roundStrong);
+                tr.appendChild(roundCell);
+                
+                // Player score cells
+                players.forEach(player => {
+                    const score = round[player] || 0;
+                    const cumulative = roundTotals[player];
 
-                            const isBestInRound = score === bestRoundScore && bestRoundScore !== worstRoundScore;
-                            const isWorstInRound = score === worstRoundScore && bestRoundScore !== worstRoundScore;
-                            const isLeaderInRound = cumulative === leaderScore;
-                            const isLastPlace = cumulative === lastPlaceScore && cumulative > 0 && players.length > 1;
+                    const isBestInRound = score === bestRoundScore && bestRoundScore !== worstRoundScore;
+                    const isWorstInRound = score === worstRoundScore && bestRoundScore !== worstRoundScore;
+                    const isLeaderInRound = cumulative === leaderScore;
+                    const isLastPlace = cumulative === lastPlaceScore && cumulative > 0 && players.length > 1;
 
-                            const scoreClass = isBestInRound ? 'best-score' : (isWorstInRound ? 'worst-score' : '');
-                            const totalClass = isLeaderInRound ? 'current-leader' : (isLastPlace && cumulative !== leaderScore ? 'last-place' : '');
+                    const scoreClass = isBestInRound ? 'best-score' : (isWorstInRound ? 'worst-score' : '');
+                    const totalClass = isLeaderInRound ? 'current-leader' : (isLastPlace && cumulative !== leaderScore ? 'last-place' : '');
 
-                            return `
-                            <td class="round-score ${scoreClass}">
-                                <input type="number"
-                                        class="score-input"
-                                        value="${score}"
-                                        onchange="updateScore(${idx}, '${player}', this.value)"
-                                        onfocus="this.select()"
-                                        min="0" />
-                            </td>
-                            <td class="cumulative-total ${totalClass}">
-                                ${cumulative}${isLeaderInRound ? ' 👑' : ''}
-                            </td>
-                        `}).join('')}
-                        <td class="leader-cell">
-                            ${leaders.length === 1 ? `${leaders[0]}` :
-                              leaders.length > 1 ? `Tie` : ''}
-                        </td>
-                    </tr>
-                `}).join('');
+                    // Score input cell
+                    const scoreCell = document.createElement('td');
+                    scoreCell.className = `round-score ${scoreClass}`;
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.className = 'score-input';
+                    input.value = score;
+                    input.min = '0';
+                    input.addEventListener('change', function() {
+                        updateScore(idx, player, this.value);
+                    });
+                    input.addEventListener('focus', function() {
+                        this.select();
+                    });
+                    scoreCell.appendChild(input);
+                    tr.appendChild(scoreCell);
+
+                    // Cumulative total cell
+                    const totalCell = document.createElement('td');
+                    totalCell.className = `cumulative-total ${totalClass}`;
+                    totalCell.textContent = cumulative + (isLeaderInRound ? ' 👑' : '');
+                    tr.appendChild(totalCell);
+                });
+                
+                // Leader cell
+                const leaderCell = document.createElement('td');
+                leaderCell.className = 'leader-cell';
+                if (leaders.length === 1) {
+                    leaderCell.textContent = leaders[0];
+                } else if (leaders.length > 1) {
+                    leaderCell.textContent = 'Tie';
+                }
+                tr.appendChild(leaderCell);
+                
+                tbody.appendChild(tr);
+            });
 
             const totals = calculateTotals();
             const currentLeaderScore = Math.min(...Object.values(totals));
             const currentLastPlaceScore = Math.max(...Object.values(totals));
 
-            document.getElementById('scoreTableFoot').innerHTML = `
-                <tr class="total-row">
-                    <td>Final</td>
-                    ${players.map(player => {
-                        const isLeader = totals[player] === currentLeaderScore;
-                        const isLastPlace = totals[player] === currentLastPlaceScore && totals[player] !== currentLeaderScore;
-                        return `<td colspan="2" class="${isLeader ? 'current-leader' : (isLastPlace ? 'last-place' : '')}">${totals[player]}${isLeader ? ' 👑' : ''}${isLastPlace ? ' ❌' : ''}</td>`;
-                    }).join('')}
-                    <td></td>
-                </tr>
-            `;
+            // Render table footer with escaped player names
+            const tfoot = document.getElementById('scoreTableFoot');
+            tfoot.innerHTML = '';
+            
+            const footerRow = document.createElement('tr');
+            footerRow.className = 'total-row';
+            
+            const finalCell = document.createElement('td');
+            finalCell.textContent = 'Final';
+            footerRow.appendChild(finalCell);
+            
+            players.forEach(player => {
+                const isLeader = totals[player] === currentLeaderScore;
+                const isLastPlace = totals[player] === currentLastPlaceScore && totals[player] !== currentLeaderScore;
+                
+                const td = document.createElement('td');
+                td.setAttribute('colspan', '2');
+                td.className = isLeader ? 'current-leader' : (isLastPlace ? 'last-place' : '');
+                td.textContent = totals[player] + (isLeader ? ' 👑' : '') + (isLastPlace ? ' ❌' : '');
+                footerRow.appendChild(td);
+            });
+            
+            const emptyCell = document.createElement('td');
+            footerRow.appendChild(emptyCell);
+            tfoot.appendChild(footerRow);
 
             document.getElementById('currentRound').textContent =
                 gameEnded ? 'Game Ended' : `Round ${currentRound + 1}`;
